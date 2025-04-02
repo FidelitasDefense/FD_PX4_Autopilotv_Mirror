@@ -14,10 +14,13 @@ jobs:
   analyze:
     name: Analyze
     runs-on: ubuntu-latest
+    
     strategy:
       fail-fast: false
       matrix:
         language: [ 'cpp' ]
+        #build-mode: autobuild
+        
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
@@ -26,6 +29,7 @@ jobs:
       uses: github/codeql-action/init@v2
       with:
         languages: ${{ matrix.language }}
+        build-mode: "autobuild"
 
     - name: Build code
       run: |
