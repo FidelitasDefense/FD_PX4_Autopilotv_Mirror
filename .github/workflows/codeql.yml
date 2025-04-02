@@ -37,12 +37,12 @@ jobs:
         queries: +security-and-quality
 
     # If your C++ project uses a custom build process, you might need to run it here
-    # - name: Build C++ project
-    #   run: |
-    #     mkdir build
-    #     cd build
-    #     cmake ..
-    #     make
+    - name: Build C++ project
+       run: |
+         mkdir build
+         cd build
+         cmake ..
+         make
 
     # For CMake projects, you could use this approach instead
     # - name: Build with CMake
