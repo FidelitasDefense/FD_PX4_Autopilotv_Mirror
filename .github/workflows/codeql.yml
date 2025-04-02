@@ -18,8 +18,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: [ 'c-cpp' ]
-        #build-mode: autobuild
+        language: ['c-cpp']
+        build-mode: [autobuild]
         
     steps:
     - name: Checkout repository
@@ -29,7 +29,7 @@ jobs:
       uses: github/codeql-action/init@v2
       with:
         languages: ${{ matrix.language }}
-        build-mode: "autobuild"
+        #build-mode: "autobuild"
 
     #- name: Build code
       #run: |
