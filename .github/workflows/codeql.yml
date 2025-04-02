@@ -8,91 +8,36 @@ on:
   pull_request:
     branches: [ main ]
   schedule:
-    - cron: '30 1 * * 1'  # Fixed space in cron syntax
+    - cron: '30 1 * * 1'  # Runs weekly on Monday at 01:30 UTC
+
 jobs:
   analyze:
     name: Analyze Code with CodeQL
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest  # Use Ubuntu, or switch to windows/macOS if needed
+
     permissions:
-      security-events: write
+      security-events: write  # Required for uploading SARIF results
       actions: read
       contents: read
-    env:
-      # Force CodeQL to use the trace commands
-      CODEQL_EXTRACTOR_CPP_TRAP_CACHE: "false"
-      CODEQL_EXTRACTOR_CPP_EXTRACT_IN_PARENT_PROCESS: "false"
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          
-      - name: Install Dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential cmake g++ clang
-          
-      # Create a configuration file for CodeQL
-      - name: Create CodeQL Config
-        run: |
-          mkdir -p .github/codeql
-          cat > .github/codeql/codeql-config.yml << 'EOL'
-          paths-ignore:
-            - node_modules
-            - '**/*.test.cpp'
-            - '**/*_test.cpp'
-            - '**/test/**'
-          EOL
-          
-      - name: List C++ Files and Directories
-        run: |
-          echo "=== Repository Structure ==="
-          ls -la
-          echo "=== C++ Files ==="
-          find . -type f -name "*.cpp" -o -name "*.cc" -o -name "*.c" -o -name "*.h" -o -name "*.hpp"
-          
+
+      - name: List directory contents
+        run: ls -R
+
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
-          languages: cpp
-          config-file: ./.github/codeql/codeql-config.yml
-          debug: true
-          
-      # Try a tracked manual compilation instead of autobuild
-      - name: Manual Compilation with CodeQL Tracing
-        run: |
-          # Create a build directory
-          mkdir -p build
-          cd build
-          
-          # Create a simple CMake file if one doesn't exist
-          if [ ! -f ../CMakeLists.txt ]; then
-            echo "Creating basic CMakeLists.txt"
-            echo "cmake_minimum_required(VERSION 3.10)" > ../CMakeLists.txt
-            echo "project(CodeQLAnalysis)" >> ../CMakeLists.txt
-            
-            # Add all cpp files to the project
-            echo "file(GLOB_RECURSE SOURCES \"../*.cpp\" \"../*.cc\" \"../*.c\")" >> ../CMakeLists.txt
-            echo "file(GLOB_RECURSE HEADERS \"../*.h\" \"../*.hpp\")" >> ../CMakeLists.txt
-            echo "add_executable(main \${SOURCES} \${HEADERS})" >> ../CMakeLists.txt
-          fi
-          
-          # Configure with compile_commands.json
-          cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
-          
-          # Try to build
-          cmake --build . || echo "Build failed but continuing with analysis"
-          
-          # If cmake build fails, try direct compilation
-          cd ..
-          echo "Attempting direct compilation of each file"
-          for file in $(find . -type f -name "*.cpp" -o -name "*.cc" -o -name "*.c"); do
-            echo "Compiling $file"
-            g++ -c "$file" -I. || echo "Failed to compile $file (continuing)"
-          done
-          
+          languages: cpp  # Specify C++ as the language
+
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
         with:
           category: "/language:cpp"
-          upload: always
+
+      - name: Upload CodeQL Database (Optional)
+        run: |
+          zip -r codeql-database.zip $CODEQL_EXTRACTOR_CPP_ROOT
+          mv codeql-database.zip $GITHUB_WORKSPACE/
