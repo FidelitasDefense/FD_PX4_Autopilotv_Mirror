@@ -31,13 +31,13 @@ jobs:
         languages: ${{ matrix.language }}
         build-mode: "autobuild"
 
-    #- name: Build code
-      #run: |
+    - name: Build code
+      run: |
         # Add commands to build your code
-        #mkdir build
-        #cd build
-        #cmake ..
-        #make
+        mkdir build
+        cd build
+        cmake ..
+        make
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v2
