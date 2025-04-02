@@ -4,40 +4,38 @@ name: "CodeQL Advanced CPP"
 
 on:
   push:
-    branches: [ main ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ main ]
+    branches: [ "main" ]
   schedule:
-    - cron: '30 1 * * 1'  # Runs weekly on Monday at 01:30 UTC
+    - cron: '0 0 * * 0'
 
 jobs:
   analyze:
-    name: Analyze Code with CodeQL
-    runs-on: ubuntu-latest  # Use Ubuntu, or switch to windows/macOS if needed
-
-    permissions:
-      security-events: write  # Required for uploading SARIF results
-      actions: read
-      contents: read
-
+    name: Analyze
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [ 'cpp' ]
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v2
 
-      - name: List directory contents
-        run: ls -R
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v2
+      with:
+        languages: ${{ matrix.language }}
 
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
-        with:
-          languages: cpp  # Specify C++ as the language
+    - name: Build code
+      run: |
+        # Add commands to build your code
+        mkdir build
+        cd build
+        cmake ..
+        make
 
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
-        with:
-          category: "/language:cpp"
-
-      - name: Upload CodeQL Database (Optional)
-        run: |
-          zip -r codeql-database.zip $CODEQL_EXTRACTOR_CPP_ROOT
-          mv codeql-database.zip $GITHUB_WORKSPACE/
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v2
+      with:
+        category: "/language:${{ matrix.language }}"
